@@ -1,11 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from "recharts";
 import { 
   TrendingUp, 
   TrendingDown,
   BarChart3, 
-  PieChart,
+  PieChart as PieChartIcon,
   Calendar,
   Download,
   Filter,
@@ -64,6 +66,25 @@ const Analytics = () => {
     { month: "Nov", clients: 118, revenue: 42000 },
     { month: "Dec", clients: 125, revenue: 48000 }
   ];
+
+  const pieChartData = [
+    { name: "Cloud Infrastructure", value: 45, color: "hsl(var(--primary))" },
+    { name: "Cybersecurity Suite", value: 32, color: "hsl(var(--success))" },
+    { name: "IT Support", value: 67, color: "hsl(var(--warning))" },
+    { name: "Network Management", value: 28, color: "hsl(var(--error))" },
+    { name: "Database Management", value: 18, color: "hsl(var(--muted-foreground))" }
+  ];
+
+  const chartConfig = {
+    revenue: {
+      label: "Revenue",
+      color: "hsl(var(--primary))",
+    },
+    clients: {
+      label: "Clients",
+      color: "hsl(var(--success))",
+    },
+  };
 
   return (
     <div className="space-y-6">
@@ -131,27 +152,30 @@ const Analytics = () => {
             <CardDescription>Monthly revenue and client growth</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {clientActivity.map((data, index) => (
-                <div key={data.month} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-                      <span className="text-xs font-bold text-primary-foreground">{data.month}</span>
-                    </div>
-                    <div>
-                      <p className="font-medium">{data.clients} Clients</p>
-                      <p className="text-sm text-muted-foreground">${data.revenue.toLocaleString()} Revenue</p>
-                    </div>
-                  </div>
-                  <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-primary transition-all duration-500"
-                      style={{ width: `${(data.revenue / 50000) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ChartContainer config={chartConfig} className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={clientActivity}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Area 
+                    type="monotone" 
+                    dataKey="revenue" 
+                    stroke="hsl(var(--primary))" 
+                    fill="hsl(var(--primary))" 
+                    fillOpacity={0.3}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="clients" 
+                    stroke="hsl(var(--success))" 
+                    fill="hsl(var(--success))" 
+                    fillOpacity={0.3}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
 
@@ -159,39 +183,33 @@ const Analytics = () => {
         <Card className="shadow-card border-0 hover:shadow-hover transition-all duration-300">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5" />
+              <PieChartIcon className="h-5 w-5" />
               Service Performance
             </CardTitle>
             <CardDescription>Revenue breakdown by service type</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {serviceMetrics.map((service, index) => (
-                <div key={service.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-all duration-200">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${
-                      index === 0 ? 'bg-primary' :
-                      index === 1 ? 'bg-success' :
-                      index === 2 ? 'bg-warning' :
-                      index === 3 ? 'bg-error' : 'bg-muted-foreground'
-                    }`}></div>
-                    <div>
-                      <p className="font-medium text-sm">{service.name}</p>
-                      <p className="text-xs text-muted-foreground">{service.clients} clients</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-sm">{service.revenue}</p>
-                    <Badge 
-                      variant="secondary"
-                      className="text-xs bg-success/10 text-success"
-                    >
-                      {service.growth}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ChartContainer config={chartConfig} className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieChartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {pieChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>

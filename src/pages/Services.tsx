@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,8 +21,7 @@ import {
 
 const Services = () => {
   const [searchTerm, setSearchTerm] = useState("");
-
-  const services = [
+  const [services, setServices] = useState([
     {
       id: 1,
       name: "Cloud Infrastructure",
@@ -88,7 +88,12 @@ const Services = () => {
       icon: Database,
       features: ["Performance Tuning", "Backup Solutions", "Migration Services"]
     }
-  ];
+  ]);
+
+  const handleDeleteService = (serviceId: number) => {
+    setServices(prevServices => prevServices.filter(service => service.id !== serviceId));
+    toast.success("Service deleted successfully!");
+  };
 
   const filteredServices = services.filter(service =>
     service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -207,7 +212,12 @@ const Services = () => {
                   <Button size="sm" variant="outline" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => handleDeleteService(service.id)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
