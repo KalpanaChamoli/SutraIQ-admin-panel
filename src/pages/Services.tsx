@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 const Services = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [services, setServices] = useState([
     {
@@ -91,8 +92,12 @@ const Services = () => {
   ]);
 
   const handleDeleteService = (serviceId: number) => {
+    console.log("Deleting service with ID:", serviceId);
     setServices(prevServices => prevServices.filter(service => service.id !== serviceId));
-    toast.success("Service deleted successfully!");
+    toast({
+      title: "Success",
+      description: "Service deleted successfully!",
+    });
   };
 
   const filteredServices = services.filter(service =>
