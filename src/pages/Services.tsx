@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +26,10 @@ import {
 const Services = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
+  const [editingService, setEditingService] = useState<any>(null);
+  const [viewingService, setViewingService] = useState<any>(null);
   const [services, setServices] = useState([
     {
       id: 1,
@@ -91,6 +99,16 @@ const Services = () => {
     }
   ]);
 
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      description: "",
+      category: "",
+      price: "",
+      features: ""
+    }
+  });
+
   const handleDeleteService = (serviceId: number) => {
     console.log("Deleting service with ID:", serviceId);
     setServices(prevServices => prevServices.filter(service => service.id !== serviceId));
@@ -100,10 +118,70 @@ const Services = () => {
     });
   };
 
-  const filteredServices = services.filter(service =>
-    service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    service.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleAddService = (data: any) => {
+    const newService = {
+      id: services.length + 1,
+      name: data.name,
+      description: data.description,
+      category: data.category,
+      price: data.price,
+      status: "active",
+      clients: 0,
+      icon: Database, // Default icon
+      features: data.features.split(',').map((f: string) => f.trim())
+    };
+    setServices(prev => [...prev, newService]);
+    setIsAddServiceOpen(false);
+    form.reset();
+    toast({
+      title: "Success",
+      description: "Service added successfully!",
+    });
+  };
+
+  const handleEditService = (service: any) => {
+    setEditingService(service);
+    form.reset({
+      name: service.name,
+      description: service.description,
+      category: service.category,
+      price: service.price,
+      features: service.features.join(', ')
+    });
+  };
+
+  const handleUpdateService = (data: any) => {
+    setServices(prev => prev.map(service => 
+      service.id === editingService.id 
+        ? { ...service, ...data, features: data.features.split(',').map((f: string) => f.trim()) }
+        : service
+    ));
+    setEditingService(null);
+    form.reset();
+    toast({
+      title: "Success",
+      description: "Service updated successfully!",
+    });
+  };
+
+  const handleFilter = () => {
+    // Toggle filter category
+    const categories = ["all", "Infrastructure", "Security", "Networking", "Support", "Mobile", "Database"];
+    const currentIndex = categories.indexOf(filterCategory);
+    const nextIndex = (currentIndex + 1) % categories.length;
+    setFilterCategory(categories[nextIndex]);
+    toast({
+      title: "Filter Applied",
+      description: `Showing ${categories[nextIndex]} services`,
+    });
+  };
+
+  const filteredServices = services.filter(service => {
+    const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         service.category.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterCategory === "all" || service.category === filterCategory;
+    return matchesSearch && matchesFilter;
+  });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -138,10 +216,105 @@ const Services = () => {
           <h1 className="text-3xl font-bold tracking-tight">Services</h1>
           <p className="text-muted-foreground">Manage your IT services and offerings</p>
         </div>
-        <Button className="bg-gradient-primary hover:shadow-hover transition-all duration-300">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Service
-        </Button>
+        <Dialog open={isAddServiceOpen} onOpenChange={setIsAddServiceOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-gradient-primary hover:shadow-hover transition-all duration-300">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Service
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Service</DialogTitle>
+              <DialogDescription>Create a new service offering for your clients</DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleAddService)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Service Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter service name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Service description" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Infrastructure">Infrastructure</SelectItem>
+                          <SelectItem value="Security">Security</SelectItem>
+                          <SelectItem value="Networking">Networking</SelectItem>
+                          <SelectItem value="Support">Support</SelectItem>
+                          <SelectItem value="Mobile">Mobile</SelectItem>
+                          <SelectItem value="Database">Database</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Price</FormLabel>
+                      <FormControl>
+                        <Input placeholder="$99/month" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="features"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Features</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Feature 1, Feature 2, Feature 3" {...field} />
+                      </FormControl>
+                      <FormDescription>Separate features with commas</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <Button type="submit">Add Service</Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Search and Filters */}
@@ -157,9 +330,9 @@ const Services = () => {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" onClick={handleFilter}>
               <Filter className="h-4 w-4" />
-              Filter
+              Filter ({filterCategory})
             </Button>
           </div>
         </CardContent>
@@ -211,10 +384,20 @@ const Services = () => {
                   <p className="text-xs text-muted-foreground">{service.clients} clients</p>
                 </div>
                 <div className="flex gap-1">
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setViewingService(service)}
+                  >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => handleEditService(service)}
+                  >
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button 
@@ -276,6 +459,95 @@ const Services = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Service Dialog */}
+      <Dialog open={!!editingService} onOpenChange={() => setEditingService(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Service</DialogTitle>
+            <DialogDescription>Update service information</DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleUpdateService)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Service Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Price</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit">Update Service</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Service Dialog */}
+      <Dialog open={!!viewingService} onOpenChange={() => setViewingService(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{viewingService?.name}</DialogTitle>
+            <DialogDescription>{viewingService?.description}</DialogDescription>
+          </DialogHeader>
+          {viewingService && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium">Category</h4>
+                <p className="text-sm text-muted-foreground">{viewingService.category}</p>
+              </div>
+              <div>
+                <h4 className="font-medium">Price</h4>
+                <p className="text-sm text-muted-foreground">{viewingService.price}</p>
+              </div>
+              <div>
+                <h4 className="font-medium">Active Clients</h4>
+                <p className="text-sm text-muted-foreground">{viewingService.clients}</p>
+              </div>
+              <div>
+                <h4 className="font-medium">Features</h4>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {viewingService.features?.map((feature: string, index: number) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {feature}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

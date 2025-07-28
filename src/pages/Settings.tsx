@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Settings as SettingsIcon, 
   User, 
@@ -22,6 +25,16 @@ import {
 } from "lucide-react";
 
 const Settings = () => {
+  const { toast } = useToast();
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [notifications, setNotifications] = useState({
+    email: true,
+    inquiries: true,
+    alerts: true,
+    reports: false,
+    marketing: false
+  });
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -30,10 +43,21 @@ const Settings = () => {
           <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
           <p className="text-muted-foreground">Manage your account and application preferences</p>
         </div>
-        <Button className="bg-gradient-primary hover:shadow-hover transition-all duration-300">
-          <Save className="h-4 w-4 mr-2" />
-          Save Changes
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            className="bg-gradient-primary hover:shadow-hover transition-all duration-300"
+            onClick={() => toast({ title: "Success", description: "Settings saved successfully!" })}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save Changes
+          </Button>
+          <Button 
+            variant="destructive" 
+            onClick={() => setLogoutDialogOpen(true)}
+          >
+            Logout
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -53,7 +77,20 @@ const Settings = () => {
                   <span className="text-2xl font-bold text-primary-foreground">JD</span>
                 </div>
                 <div className="space-y-2">
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-2"
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = 'image/*';
+                      input.onchange = () => {
+                        toast({ title: "Success", description: "Photo uploaded successfully!" });
+                      };
+                      input.click();
+                    }}
+                  >
                     <Upload className="h-4 w-4" />
                     Upload Photo
                   </Button>
@@ -151,7 +188,16 @@ const Settings = () => {
                     <p className="font-medium">Two-Factor Authentication</p>
                     <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
                   </div>
-                  <Switch />
+                  <Switch 
+                    checked={twoFactorEnabled}
+                    onCheckedChange={(checked) => {
+                      setTwoFactorEnabled(checked);
+                      toast({ 
+                        title: checked ? "Enabled" : "Disabled", 
+                        description: `Two-factor authentication ${checked ? "enabled" : "disabled"}!` 
+                      });
+                    }}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -159,7 +205,16 @@ const Settings = () => {
                     <p className="font-medium">Login Notifications</p>
                     <p className="text-sm text-muted-foreground">Get notified of new logins</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={notifications.email}
+                    onCheckedChange={(checked) => {
+                      setNotifications(prev => ({ ...prev, email: checked }));
+                      toast({ 
+                        title: checked ? "Enabled" : "Disabled", 
+                        description: `Login notifications ${checked ? "enabled" : "disabled"}!` 
+                      });
+                    }}
+                  />
                 </div>
               </div>
             </CardContent>
@@ -183,7 +238,10 @@ const Settings = () => {
                     <p className="font-medium text-sm">Email Notifications</p>
                     <p className="text-xs text-muted-foreground">Receive updates via email</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={notifications.email}
+                    onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, email: checked }))}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -191,7 +249,10 @@ const Settings = () => {
                     <p className="font-medium text-sm">New Client Inquiries</p>
                     <p className="text-xs text-muted-foreground">Get notified instantly</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={notifications.inquiries}
+                    onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, inquiries: checked }))}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -199,7 +260,10 @@ const Settings = () => {
                     <p className="font-medium text-sm">Service Alerts</p>
                     <p className="text-xs text-muted-foreground">System status updates</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={notifications.alerts}
+                    onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, alerts: checked }))}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -207,7 +271,10 @@ const Settings = () => {
                     <p className="font-medium text-sm">Weekly Reports</p>
                     <p className="text-xs text-muted-foreground">Performance summaries</p>
                   </div>
-                  <Switch />
+                  <Switch 
+                    checked={notifications.reports}
+                    onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, reports: checked }))}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -215,7 +282,10 @@ const Settings = () => {
                     <p className="font-medium text-sm">Marketing Updates</p>
                     <p className="text-xs text-muted-foreground">Product news and tips</p>
                   </div>
-                  <Switch />
+                  <Switch 
+                    checked={notifications.marketing}
+                    onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, marketing: checked }))}
+                  />
                 </div>
               </div>
             </CardContent>
@@ -310,6 +380,33 @@ const Settings = () => {
           </Card>
         </div>
       </div>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Logout</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to logout? You will need to sign in again to access your account.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLogoutDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                toast({ title: "Logged out", description: "You have been logged out successfully!" });
+                setLogoutDialogOpen(false);
+                // In a real app, this would redirect to login page
+              }}
+            >
+              Logout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,4 +1,9 @@
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,9 +26,14 @@ import {
 } from "lucide-react";
 
 const Clients = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterIndustry, setFilterIndustry] = useState("all");
+  const [isAddClientOpen, setIsAddClientOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<any>(null);
+  const [viewingClient, setViewingClient] = useState<any>(null);
 
-  const clients = [
+  const [clients, setClients] = useState([
     {
       id: 1,
       name: "TechCorp Inc.",
@@ -102,13 +112,68 @@ const Clients = () => {
       avatar: "EC",
       industry: "Manufacturing"
     }
-  ];
+  ]);
 
-  const filteredClients = clients.filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.industry.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      location: "",
+      industry: "",
+      services: ""
+    }
+  });
+
+  const handleAddClient = (data: any) => {
+    const newClient = {
+      id: clients.length + 1,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      location: data.location,
+      joinDate: new Date().toISOString().split('T')[0],
+      totalSpent: "$0",
+      services: data.services.split(',').map((s: string) => s.trim()),
+      status: "active",
+      avatar: data.name.split(' ').map((n: string) => n[0]).join(''),
+      industry: data.industry
+    };
+    setClients(prev => [...prev, newClient]);
+    setIsAddClientOpen(false);
+    form.reset();
+    toast({
+      title: "Success",
+      description: "Client added successfully!",
+    });
+  };
+
+  const handleDeleteClient = (clientId: number) => {
+    setClients(prev => prev.filter(client => client.id !== clientId));
+    toast({
+      title: "Success",
+      description: "Client deleted successfully!",
+    });
+  };
+
+  const handleFilter = () => {
+    const industries = ["all", "Technology", "Research", "Startup", "Enterprise", "Consulting", "Manufacturing"];
+    const currentIndex = industries.indexOf(filterIndustry);
+    const nextIndex = (currentIndex + 1) % industries.length;
+    setFilterIndustry(industries[nextIndex]);
+    toast({
+      title: "Filter Applied",
+      description: `Showing ${industries[nextIndex]} clients`,
+    });
+  };
+
+  const filteredClients = clients.filter(client => {
+    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         client.industry.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterIndustry === "all" || client.industry === filterIndustry;
+    return matchesSearch && matchesFilter;
+  });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -143,10 +208,99 @@ const Clients = () => {
           <h1 className="text-3xl font-bold tracking-tight">Clients</h1>
           <p className="text-muted-foreground">Manage your client relationships and accounts</p>
         </div>
-        <Button className="bg-gradient-primary hover:shadow-hover transition-all duration-300">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Client
-        </Button>
+        <Dialog open={isAddClientOpen} onOpenChange={setIsAddClientOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-gradient-primary hover:shadow-hover transition-all duration-300">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Client
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Client</DialogTitle>
+              <DialogDescription>Add a new client to your system</DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleAddClient)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter company name" {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="contact@company.com" {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+1 (555) 123-4567" {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location</FormLabel>
+                      <FormControl>
+                        <Input placeholder="City, State" {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="industry"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Industry</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select industry" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Technology">Technology</SelectItem>
+                          <SelectItem value="Research">Research</SelectItem>
+                          <SelectItem value="Startup">Startup</SelectItem>
+                          <SelectItem value="Enterprise">Enterprise</SelectItem>
+                          <SelectItem value="Consulting">Consulting</SelectItem>
+                          <SelectItem value="Manufacturing">Manufacturing</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <Button type="submit">Add Client</Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Search and Filters */}
@@ -162,9 +316,9 @@ const Clients = () => {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" onClick={handleFilter}>
               <Filter className="h-4 w-4" />
-              Filter
+              Filter ({filterIndustry})
             </Button>
           </div>
         </CardContent>
@@ -244,13 +398,28 @@ const Clients = () => {
                   <span className="font-bold text-primary">{client.totalSpent}</span>
                 </div>
                 <div className="flex gap-1">
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setViewingClient(client)}
+                  >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setEditingClient(client)}
+                  >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => handleDeleteClient(client.id)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -307,6 +476,44 @@ const Clients = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* View Client Dialog */}
+      <Dialog open={!!viewingClient} onOpenChange={() => setViewingClient(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{viewingClient?.name}</DialogTitle>
+            <DialogDescription>Client details and information</DialogDescription>
+          </DialogHeader>
+          {viewingClient && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium">Contact Information</h4>
+                <p className="text-sm text-muted-foreground">{viewingClient.email}</p>
+                <p className="text-sm text-muted-foreground">{viewingClient.phone}</p>
+                <p className="text-sm text-muted-foreground">{viewingClient.location}</p>
+              </div>
+              <div>
+                <h4 className="font-medium">Industry</h4>
+                <p className="text-sm text-muted-foreground">{viewingClient.industry}</p>
+              </div>
+              <div>
+                <h4 className="font-medium">Total Spent</h4>
+                <p className="text-sm text-muted-foreground">{viewingClient.totalSpent}</p>
+              </div>
+              <div>
+                <h4 className="font-medium">Active Services</h4>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {viewingClient.services?.map((service: string, index: number) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {service}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

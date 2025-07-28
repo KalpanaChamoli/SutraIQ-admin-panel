@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from "recharts";
 import { 
@@ -19,6 +21,9 @@ import {
 } from "lucide-react";
 
 const Analytics = () => {
+  const { toast } = useToast();
+  const [dateRange, setDateRange] = useState("Last 30 days");
+  const [filterType, setFilterType] = useState("all");
   const metrics = [
     {
       title: "Revenue Growth",
@@ -86,6 +91,62 @@ const Analytics = () => {
     },
   };
 
+  const handleExport = () => {
+    // Create CSV data
+    const csvData = [
+      ["Service", "Clients", "Revenue", "Growth"],
+      ...serviceMetrics.map(service => [
+        service.name,
+        service.clients.toString(),
+        service.revenue,
+        service.growth
+      ])
+    ];
+    
+    const csvContent = csvData.map(row => row.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "analytics-report.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Success",
+      description: "Analytics report exported successfully!",
+    });
+  };
+
+  const handleRefresh = () => {
+    toast({
+      title: "Success",
+      description: "Analytics data refreshed!",
+    });
+  };
+
+  const handleFilter = () => {
+    const filters = ["all", "revenue", "clients", "services"];
+    const currentIndex = filters.indexOf(filterType);
+    const nextIndex = (currentIndex + 1) % filters.length;
+    setFilterType(filters[nextIndex]);
+    toast({
+      title: "Filter Applied",
+      description: `Showing ${filters[nextIndex]} data`,
+    });
+  };
+
+  const handleDateRange = () => {
+    const ranges = ["Last 30 days", "Last 90 days", "Last 6 months", "Last year"];
+    const currentIndex = ranges.indexOf(dateRange);
+    const nextIndex = (currentIndex + 1) % ranges.length;
+    setDateRange(ranges[nextIndex]);
+    toast({
+      title: "Date Range Updated",
+      description: `Showing data for ${ranges[nextIndex]}`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -95,19 +156,19 @@ const Analytics = () => {
           <p className="text-muted-foreground">Comprehensive insights into your IT services performance</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={handleDateRange}>
             <Calendar className="h-4 w-4" />
-            Last 30 days
+            {dateRange}
           </Button>
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={handleFilter}>
             <Filter className="h-4 w-4" />
-            Filter
+            Filter ({filterType})
           </Button>
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
-          <Button className="bg-gradient-primary hover:shadow-hover transition-all duration-300 gap-2">
+          <Button className="bg-gradient-primary hover:shadow-hover transition-all duration-300 gap-2" onClick={handleExport}>
             <Download className="h-4 w-4" />
             Export
           </Button>

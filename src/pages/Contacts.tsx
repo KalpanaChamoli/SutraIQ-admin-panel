@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,10 +25,14 @@ import {
 } from "lucide-react";
 
 const Contacts = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("all");
+  const [replyDialogOpen, setReplyDialogOpen] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<any>(null);
+  const [replyMessage, setReplyMessage] = useState("");
 
-  const inquiries = [
+  const [inquiries, setInquiries] = useState([
     {
       id: 1,
       name: "Sarah Johnson",
@@ -110,7 +117,74 @@ const Contacts = () => {
       avatar: "JW",
       category: "Security"
     }
-  ];
+  ]);
+
+  const handleReply = (inquiry: any) => {
+    setReplyingTo(inquiry);
+    setReplyDialogOpen(true);
+  };
+
+  const handleSendReply = () => {
+    setInquiries(prev => prev.map(inquiry => 
+      inquiry.id === replyingTo.id 
+        ? { ...inquiry, status: "responded" }
+        : inquiry
+    ));
+    setReplyDialogOpen(false);
+    setReplyMessage("");
+    toast({
+      title: "Success",
+      description: "Reply sent successfully!",
+    });
+  };
+
+  const handleDelete = (inquiryId: number) => {
+    setInquiries(prev => prev.filter(inquiry => inquiry.id !== inquiryId));
+    toast({
+      title: "Success",
+      description: "Inquiry deleted successfully!",
+    });
+  };
+
+  const handleStar = (inquiryId: number) => {
+    toast({
+      title: "Success",
+      description: "Inquiry starred!",
+    });
+  };
+
+  const handleArchive = (inquiryId: number) => {
+    setInquiries(prev => prev.map(inquiry => 
+      inquiry.id === inquiryId 
+        ? { ...inquiry, status: "closed" }
+        : inquiry
+    ));
+    toast({
+      title: "Success",
+      description: "Inquiry archived!",
+    });
+  };
+
+  const handleArchiveAll = () => {
+    setInquiries(prev => prev.map(inquiry => ({ ...inquiry, status: "closed" })));
+    toast({
+      title: "Success",
+      description: "All inquiries archived!",
+    });
+  };
+
+  const handleBulkReply = () => {
+    const activeInquiries = inquiries.filter(i => i.status === "new" || i.status === "in-progress");
+    setInquiries(prev => prev.map(inquiry => 
+      activeInquiries.includes(inquiry) 
+        ? { ...inquiry, status: "responded" }
+        : inquiry
+    ));
+    toast({
+      title: "Success",
+      description: `Bulk reply sent to ${activeInquiries.length} inquiries!`,
+    });
+  };
 
   const filteredInquiries = inquiries.filter(inquiry => {
     const matchesSearch = inquiry.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -192,11 +266,11 @@ const Contacts = () => {
           <p className="text-muted-foreground">Manage customer inquiries and support requests</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={handleArchiveAll}>
             <Archive className="h-4 w-4" />
             Archive All
           </Button>
-          <Button className="bg-gradient-primary hover:shadow-hover transition-all duration-300 gap-2">
+          <Button className="bg-gradient-primary hover:shadow-hover transition-all duration-300 gap-2" onClick={handleBulkReply}>
             <Reply className="h-4 w-4" />
             Bulk Reply
           </Button>
@@ -300,17 +374,37 @@ const Contacts = () => {
                     </div>
 
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button size="sm" variant="outline" className="h-8 gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-8 gap-2"
+                        onClick={() => handleReply(inquiry)}
+                      >
                         <Reply className="h-4 w-4" />
                         Reply
                       </Button>
-                      <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleStar(inquiry.id)}
+                      >
                         <Star className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleArchive(inquiry.id)}
+                      >
                         <Archive className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                        onClick={() => handleDelete(inquiry.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -366,6 +460,37 @@ const Contacts = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Reply Dialog */}
+      <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reply to {replyingTo?.name}</DialogTitle>
+            <DialogDescription>
+              Replying to: {replyingTo?.subject}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Message</label>
+              <Textarea
+                placeholder="Type your reply..."
+                value={replyMessage}
+                onChange={(e) => setReplyMessage(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReplyDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSendReply}>
+              Send Reply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
