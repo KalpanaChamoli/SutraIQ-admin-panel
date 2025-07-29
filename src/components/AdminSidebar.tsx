@@ -60,7 +60,7 @@ export function AdminSidebar() {
             </div>
             {!collapsed && (
               <div>
-                <h1 className="text-lg font-bold text-sidebar-foreground">IT Zenith</h1>
+                <h1 className="text-lg font-bold text-sidebar-foreground">SutraIQ</h1>
                 <p className="text-xs text-sidebar-foreground/60">Admin Panel</p>
               </div>
             )}
