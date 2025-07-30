@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
+import axios from "axios";
 
 const Login = () => {
   const { toast } = useToast();
@@ -24,17 +26,42 @@ const Login = () => {
 
   const handleLogin = async (data: any) => {
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Success",
-        description: "Login successful! Welcome back.",
+
+    const baseUrl = "https://website-admin-rfup.onrender.com/"
+
+    try {
+      const res = await axios.post(`${baseUrl}api/admin/login`,{
+        email: data.email,
+        password : data.password,
       });
-      // In a real app, this would redirect to dashboard
-    }, 1500);
+      const {token ,admin} = res.data;
+
+      if(!token){
+       throw new Error("token not found")
+      }
+      localStorage.setItem("token", token);
+      localStorage.setItem("admin", JSON.stringify(admin));
+
+      toast({
+        title: "Login Successful",
+        description: `welcome back, ${admin.name}`,
+       
+      });
+
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+    } catch (error:any) {
+      toast({
+        title: "Login Failed",
+        description: error.response?.data?.message || "An error occurred during login.",
+      });
+    }finally{
+      setIsLoading(false);
+    }
   };
+      
+    
+    
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/50 p-4">
@@ -45,7 +72,7 @@ const Login = () => {
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-            <CardDescription>Sign in to your IT Zenith account</CardDescription>
+            
           </div>
         </CardHeader>
         
@@ -138,25 +165,30 @@ const Login = () => {
                 </Button>
               </div>
               
+                <Link to="/" >
               <Button 
                 type="submit" 
                 className="w-full bg-gradient-primary hover:shadow-hover transition-all duration-300"
                 disabled={isLoading}
               >
                 {isLoading ? "Signing in..." : "Sign In"}
+              
               </Button>
+              </Link>
               
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
                   Don't have an account?{" "}
+                  <Link to="/signup">
                   <Button 
                     variant="link" 
                     size="sm" 
                     className="p-0 h-auto text-primary"
                     onClick={() => toast({ title: "Info", description: "Contact your administrator for account creation." })}
                   >
-                    Contact Admin
+                    Signup
                   </Button>
+                  </Link>
                 </p>
               </div>
             </form>
