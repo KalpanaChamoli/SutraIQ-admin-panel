@@ -264,7 +264,7 @@ const Signup = () => {
                       size="sm" 
                       className="p-0 h-auto text-primary"
                     >
-                      Sign In
+                      login
                     </Button>
                   </Link>
                 </p>

@@ -180,14 +180,16 @@ const Login = () => {
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
                   Don't have an account?{" "}
+                  <Link to="/signup" className="text-primary hover:underline">
                   <Button 
                     variant="link" 
                     size="sm" 
                     className="p-0 h-auto text-primary"
                     onClick={() => toast({ title: "Info", description: "Contact your administrator for account creation." })}
                   >
-                    Contact Admin
+                    Signup
                   </Button>
+                  </Link>
                 </p>
               </div>
             </form>

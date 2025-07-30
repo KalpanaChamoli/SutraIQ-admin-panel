@@ -49,11 +49,11 @@ const Services = () => {
   const fetchServices = async () => {
     try {
       const baseUrl = "https://website-admin-rfup.onrender.com/";
-      const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODc0MGQ1ZmNjNzk3ZmRlNmUxYTJmZCIsImlhdCI6MTc1MzY5NTg3NiwiZXhwIjoxNzUzODY4Njc2fQ.d_zBGhWaEJmpTOOGppqZwzqunxrAwLarW6ZqKybo9c0";
+      const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODllYzIwZjdmZDE2NmI4MGI2NjcyMiIsImlhdCI6MTc1Mzg2OTQ0MiwiZXhwIjoxNzU0MDQyMjQyfQ.JcUk8otGk8G261mRqe_Mwq0GET14A_abM7f4QktRQ8o";
 
-      const res = await axios.get(`${baseUrl}api/services/`, {
+      const res = await axios.get("https://website-admin-rfup.onrender.com/api/services/" ,{
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODllYzIwZjdmZDE2NmI4MGI2NjcyMiIsImlhdCI6MTc1Mzg2OTQ0MiwiZXhwIjoxNzU0MDQyMjQyfQ.JcUk8otGk8G261mRqe_Mwq0GET14A_abM7f4QktRQ8o`,
         },
       });
 

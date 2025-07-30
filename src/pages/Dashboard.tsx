@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-// Adjust the import based on your project structure
 
 import {
   Card,
@@ -46,7 +45,7 @@ const Dashboard = () => {
           "https://website-admin-rfup.onrender.com/api/dashboard/stats",
           {
             headers: {
-              Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODc0MGQ1ZmNjNzk3ZmRlNmUxYTJmZCIsImlhdCI6MTc1MzY5NTg3NiwiZXhwIjoxNzUzODY4Njc2fQ.d_zBGhWaEJmpTOOGppqZwzqunxrAwLarW6ZqKybo9c0`,
+              Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODllYzIwZjdmZDE2NmI4MGI2NjcyMiIsImlhdCI6MTc1Mzg2OTQ0MiwiZXhwIjoxNzU0MDQyMjQyfQ.JcUk8otGk8G261mRqe_Mwq0GET14A_abM7f4QktRQ8o`,
             },
           }
         );
