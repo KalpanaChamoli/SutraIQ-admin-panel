@@ -11,6 +11,8 @@ import Clients from "./pages/Clients";
 import Contacts from "./pages/Contacts";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";

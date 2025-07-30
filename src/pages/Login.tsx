@@ -9,7 +9,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
-import axios from "axios";
 
 const Login = () => {
   const { toast } = useToast();
@@ -72,7 +71,7 @@ const Login = () => {
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-            
+            <CardDescription>Sign in to your IT Zenith account</CardDescription>
           </div>
         </CardHeader>
         
@@ -179,16 +178,14 @@ const Login = () => {
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
                   Don't have an account?{" "}
-                  <Link to="/signup">
                   <Button 
                     variant="link" 
                     size="sm" 
                     className="p-0 h-auto text-primary"
                     onClick={() => toast({ title: "Info", description: "Contact your administrator for account creation." })}
                   >
-                    Signup
+                    Contact Admin
                   </Button>
-                  </Link>
                 </p>
               </div>
             </form>
